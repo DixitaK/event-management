@@ -47,13 +47,11 @@ exports.createEvent = async (req, res) => {
 
     } catch (err) {
       await client.query("ROLLBACK");
-      console.error("Transaction error:", err);
       res.status(500).json({ message: "Server error during event creation" });
     } finally {
       client.release();
     }
   } catch (err) {
-    console.error("Error:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -66,9 +64,7 @@ exports.getEvents = async (req, res) => {
     limit = parseInt(limit);
     const offset = (page - 1) * limit;
 
-    let query;
-    let params;
-
+    let query, params;
     if (category_id) {
       // Filter by category
       query = `
@@ -98,15 +94,8 @@ exports.getEvents = async (req, res) => {
     }
 
     const result = await pool.query(query, params);
-    res.status(200).json({
-      page,
-      limit,
-      count: result.rowCount,
-      events: result.rows,
-      message: "Events fetched successfully"
-    });
+    res.status(200).json({ page, limit, count: result.rowCount, events: result.rows, message: "Events fetched successfully" });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: "Events not fetched!" });
   }
 };
