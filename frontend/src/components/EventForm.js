@@ -101,7 +101,7 @@ export default function EventForm({ categories, editEvent, onSaved, onAddNew }) 
       {editEvent && (
         <button
           type="button"
-          onClick={onAddNew} style={{ marginLeft: "10px" }}>
+          onClick={onAddNew} style={{ marginLeft: "10px", backgroundColor: "green" }}>
           Add
         </button>
       )}
