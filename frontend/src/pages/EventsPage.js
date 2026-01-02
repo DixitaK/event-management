@@ -1,25 +1,53 @@
 import React, { useEffect, useState } from "react";
 import EventList from "../components/EventList";
 import EventForm from "../components/EventForm";
-import { getCategories } from "../api/events";
+import { getCategories, getEvents } from "../api/events";
 
 export default function EventsPage() {
   const [categories, setCategories] = useState([]);
   const [editEvent, setEditEvent] = useState(null);
+  const [events, setEvents] = useState([]);
 
   const fetchCategories = async () => {
-    const res = await getCategories();
-    setCategories(res.data);
+    try {
+      const res = await getCategories();
+      setCategories(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchEvents = async () => {
+    try {
+      const res = await getEvents();
+      setEvents(res.data.events);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   useEffect(() => {
     fetchCategories();
+    fetchEvents();
   }, []);
 
   return (
     <div>
-      <EventForm categories={categories} editEvent={editEvent} onSaved={() => setEditEvent(null)} />
-      <EventList categories={categories} onEdit={setEditEvent} />
+      <EventForm
+        categories={categories}
+        editEvent={editEvent}
+        onSaved={() => {
+          setEditEvent(null); // reset edit after create/update
+          fetchEvents();
+        }}
+        onAddNew={() => setEditEvent(null)} // reset form to create new
+      />
+      <EventList
+        categories={categories}
+        onEdit={setEditEvent}
+        events={events}
+        refreshEvents={fetchEvents} // refresh after delete
+      />
     </div>
   );
 }

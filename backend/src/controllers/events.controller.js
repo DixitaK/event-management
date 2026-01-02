@@ -47,12 +47,12 @@ exports.createEvent = async (req, res) => {
 
     } catch (err) {
       await client.query("ROLLBACK");
-      res.status(500).json({ message: "Server error during event creation" });
+      res.status(500).json({ message: `Server error during event creation: ${err.message}` });
     } finally {
       client.release();
     }
   } catch (err) {
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: `Internal server error: ${err.message}` });
   }
 };
 
@@ -101,11 +101,50 @@ exports.getEvents = async (req, res) => {
 };
 
 exports.updateEvent = async (req, res) => {
-  res.send("Update Event");
+  const { id } = req.params;
+  const { name, description, start_date_time, end_date_time, category_ids } = req.body;
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query(
+      `UPDATE events
+       SET name=$1, description=$2, start_date_time=$3, end_date_time=$4, updated_at=NOW()
+       WHERE id=$5`,
+      [name, description, start_date_time, end_date_time, id]
+    );
+
+    await client.query(`DELETE FROM event_categories WHERE event_id=$1`, [id]);
+    if (category_ids?.length) {
+      for (const catId of category_ids) {
+        await client.query(
+          `INSERT INTO event_categories (event_id, category_id)
+           VALUES ($1,$2)`,
+          [id, catId]
+        );
+      }
+    }
+
+    await client.query("COMMIT");
+    res.json({ message: "Event updated" });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    res.status(500).json({ message: `Server error: ${err.message}` });
+  } finally {
+    client.release();
+  }
 };
 
 exports.deleteEvent = async (req, res) => {
-  res.send("Delete Event");
+  const { id } = req.params;
+  try {
+    const result = await pool.query("DELETE FROM events WHERE id=$1 RETURNING *", [id]);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+    res.json({ message: "Event deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: `Error deleting event: ${err.message}` });
+  }
 };
 
 exports.getCategories = async () => {

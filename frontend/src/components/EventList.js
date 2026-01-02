@@ -22,22 +22,28 @@ export default function EventList({ categories, onEdit }) {
   }, [selectedCategory]);
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure?")) {
-      await deleteEvent(id);
-      fetchEvents();
+    if (window.confirm("Are you sure you want to delete this event?")) {
+      try {
+        await deleteEvent(id);
+        fetchEvents();
+      } catch (err) {
+        alert(err.response?.data?.message || "Error deleting event");
+      }
     }
   };
 
   return (
     <div>
       <h2>Events</h2>
-      <Select
-        options={categories.map(c => ({ label: c.name, value: c.id }))}
-        onChange={setSelectedCategory}
-        isClearable
-        placeholder="Filter by category"
-      />
-      <table border="1" style={{ width: "100%", marginTop: "10px" }}>
+      <div className="select-container">
+        <Select
+          options={categories.map(c => ({ label: c.name, value: c.id }))}
+          onChange={setSelectedCategory}
+          isClearable
+          placeholder="Filter by category"
+        />
+      </div>
+      <table>
         <thead>
           <tr>
             <th>Name</th>

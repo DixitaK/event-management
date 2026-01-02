@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import { createEvent, updateEvent } from "../api/events";
 
-export default function EventForm({ categories, editEvent, onSaved }) {
+export default function EventForm({ categories, editEvent, onSaved, onAddNew }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [start, setStart] = useState("");
@@ -13,23 +13,50 @@ export default function EventForm({ categories, editEvent, onSaved }) {
     if (editEvent) {
       setName(editEvent.name);
       setDescription(editEvent.description);
-      setStart(editEvent.start_date_time);
-      setEnd(editEvent.end_date_time);
-      setSelectedCategories(editEvent.categories.map(c => ({ label: c, value: c })));
+
+      // format datetime for datetime-local input
+      setStart(new Date(editEvent.start_date_time).toISOString().slice(0, 16));
+      setEnd(new Date(editEvent.end_date_time).toISOString().slice(0, 16));
+
+      // map event.categories (names) to actual IDs from categories prop
+      const preSelected = editEvent.categories
+        .map(catName => {
+          const categoryObj = categories.find(c => c.name === catName);
+          return categoryObj ? { label: categoryObj.name, value: categoryObj.id } : null;
+        })
+        .filter(Boolean);
+      setSelectedCategories(preSelected);
+    } else {
+      // reset form
+      setName("");
+      setDescription("");
+      setStart("");
+      setEnd("");
+      setSelectedCategories([]);
     }
-  }, [editEvent]);
+  }, [editEvent, categories]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Prepare category_ids array for backend
     const category_ids = selectedCategories.map(c => c.value);
+
+    const payload = {
+      name,
+      description,
+      start_date_time: start,
+      end_date_time: end,
+      category_ids
+    };
+
     try {
       if (editEvent) {
-        await updateEvent(editEvent.id, { name, description, start_date_time: start, end_date_time: end, category_ids });
+        await updateEvent(editEvent.id, payload);
       } else {
-        await createEvent({ name, description, start_date_time: start, end_date_time: end, category_ids });
+        await createEvent(payload);
       }
-      onSaved();
-      setName(""); setDescription(""); setStart(""); setEnd(""); setSelectedCategories([]);
+      onSaved(); // refresh list and reset form
     } catch (err) {
       alert(err.response?.data?.message || "Error saving event");
     }
@@ -38,6 +65,8 @@ export default function EventForm({ categories, editEvent, onSaved }) {
   return (
     <form onSubmit={handleSubmit}>
       <h2>{editEvent ? "Edit Event" : "Create Event"}</h2>
+
+      {/* Existing inputs here */}
       <div>
         <label>Name:</label>
         <input value={name} onChange={e => setName(e.target.value)} required />
@@ -63,7 +92,22 @@ export default function EventForm({ categories, editEvent, onSaved }) {
           onChange={setSelectedCategories}
         />
       </div>
+
+      {/* Buttons */}
       <button type="submit">{editEvent ? "Update" : "Create"}</button>
+
+      {editEvent && (
+        <button
+          type="button"
+          onClick={() => {
+            // Clear edit form and switch to Create mode
+            onAddNew();
+          }}
+          style={{ marginLeft: "10px", backgroundColor: "#4cd137" }}
+        >
+          Add
+        </button>
+      )}
     </form>
   );
 }
