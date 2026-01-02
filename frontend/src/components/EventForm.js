@@ -93,9 +93,7 @@ export default function EventForm({ categories, editEvent, onSaved, onAddNew }) 
         />
       </div>
 
-      {/* Buttons */}
       <button type="submit">{editEvent ? "Update" : "Create"}</button>
-
       {editEvent && (
         <button
           type="button"

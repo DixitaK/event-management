@@ -10,7 +10,9 @@ CREATE TABLE events (
   name VARCHAR(255) NOT NULL,
   description TEXT,
   start_date_time TIMESTAMP NOT NULL,
-  end_date_time TIMESTAMP NOT NULL
+  end_date_time TIMESTAMP NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
 );
 CREATE INDEX idx_events_time ON events(start_date_time, end_date_time);
 

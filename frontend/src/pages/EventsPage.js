@@ -31,23 +31,30 @@ export default function EventsPage() {
     fetchEvents();
   }, []);
 
+  const handleSaved = async () => {
+    setEditEvent(null);     // reset edit mode
+    await fetchEvents();    // ALWAYS refresh list
+  };
+
+  const handleAddNew = () => {
+    setEditEvent(null);     // only reset form, no fetch needed
+  };
+
   return (
-    <div>
+    <>
       <EventForm
         categories={categories}
         editEvent={editEvent}
-        onSaved={() => {
-          setEditEvent(null); // reset edit after create/update
-          fetchEvents();
-        }}
-        onAddNew={() => setEditEvent(null)} // reset form to create new
+        onSaved={handleSaved}
+        onAddNew={handleAddNew}
       />
+
       <EventList
         categories={categories}
         onEdit={setEditEvent}
         events={events}
-        refreshEvents={fetchEvents} // refresh after delete
+        refreshEvents={fetchEvents}
       />
-    </div>
+    </>
   );
 }

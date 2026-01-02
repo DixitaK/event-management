@@ -1,31 +1,26 @@
-import React, { useEffect, useState } from "react";
-import { getEvents, deleteEvent } from "../api/events";
+import React, { useState } from "react";
 import Select from "react-select";
+import { deleteEvent } from "../api/events";
 
-export default function EventList({ categories, onEdit }) {
-  const [events, setEvents] = useState([]);
+export default function EventList({
+  categories,
+  onEdit,
+  events,
+  refreshEvents
+}) {
   const [selectedCategory, setSelectedCategory] = useState(null);
 
-  const fetchEvents = async () => {
-    try {
-      const params = {};
-      if (selectedCategory) params.category_id = selectedCategory.value;
-      const res = await getEvents(params);
-      setEvents(res.data.events);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  useEffect(() => {
-    fetchEvents();
-  }, [selectedCategory]);
+  const filteredEvents = selectedCategory
+    ? events.filter(event =>
+      event.categories.includes(selectedCategory.label)
+    )
+    : events;
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this event?")) {
       try {
         await deleteEvent(id);
-        fetchEvents();
+        refreshEvents();
       } catch (err) {
         alert(err.response?.data?.message || "Error deleting event");
       }
@@ -55,7 +50,7 @@ export default function EventList({ categories, onEdit }) {
           </tr>
         </thead>
         <tbody>
-          {events.map(event => (
+          {filteredEvents.map(event => (
             <tr key={event.id}>
               <td>{event.name}</td>
               <td>{event.description}</td>
