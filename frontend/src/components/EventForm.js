@@ -9,14 +9,18 @@ export default function EventForm({ categories, editEvent, onSaved, onAddNew }) 
   const [end, setEnd] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
 
+  const formatDateTimeLocal = (dateString) => {
+    const date = new Date(dateString);
+    return date.toISOString().slice(0, 16);
+  };
+
   useEffect(() => {
     if (editEvent) {
       setName(editEvent.name);
-      setDescription(editEvent.description);
+      setDescription(editEvent.description || "");
 
-      // format datetime for datetime-local input
-      setStart(new Date(editEvent.start_date_time).toISOString().slice(0, 16));
-      setEnd(new Date(editEvent.end_date_time).toISOString().slice(0, 16));
+      setStart(formatDateTimeLocal(editEvent.start_date_time));
+      setEnd(formatDateTimeLocal(editEvent.end_date_time));
 
       // map event.categories (names) to actual IDs from categories prop
       const preSelected = editEvent.categories
@@ -97,12 +101,7 @@ export default function EventForm({ categories, editEvent, onSaved, onAddNew }) 
       {editEvent && (
         <button
           type="button"
-          onClick={() => {
-            // Clear edit form and switch to Create mode
-            onAddNew();
-          }}
-          style={{ marginLeft: "10px", backgroundColor: "#4cd137" }}
-        >
+          onClick={onAddNew} style={{ marginLeft: "10px" }}>
           Add
         </button>
       )}
