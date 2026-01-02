@@ -107,3 +107,8 @@ exports.updateEvent = async (req, res) => {
 exports.deleteEvent = async (req, res) => {
   res.send("Delete Event");
 };
+
+exports.getCategories = async () => {
+  const result = await pool.query("SELECT * FROM categories ORDER BY name");
+  return result.rows;
+};
